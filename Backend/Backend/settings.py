@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
     "Apps.User",
     "Apps.Account",
     "Apps.Movie",
@@ -64,6 +65,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "Backend.urls"
 
+SETTINGS_PATH = os.path.dirname(os.path.dirname(__file__))
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
