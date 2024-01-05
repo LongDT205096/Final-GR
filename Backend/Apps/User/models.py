@@ -5,8 +5,8 @@ class User(models.Model):
     account = models.OneToOneField("Account.Account", on_delete=models.CASCADE)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    phone = models.CharField(max_length=10)
-    bio = models.TextField(blank=True)
+    phone = models.CharField(null=True, max_length=10)
+    bio = models.TextField(null=True, blank=True)
     birthday = models.DateField(null=True, blank=True)
     country = models.CharField(max_length=50)
     
