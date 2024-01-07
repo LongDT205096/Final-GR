@@ -1,11 +1,19 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from rest_framework.exceptions import ValidationError
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from firebase_admin import auth, initialize_app, credentials
 import pyrebase
 
-from .serializer import AccountSerializer
+from .serializer import (
+    AccountSerializer,
+    ChangePasswordSerializer
+)
+
 from .models import Account
 from ..User.models import User
 
@@ -23,7 +31,7 @@ config = {
 firebase = pyrebase.initialize_app(config)
 authe = firebase.auth()
 database = firebase.database()
-
+default_app = initialize_app()
 
 class RegisterView(APIView):
     def post(self, request):
@@ -32,11 +40,14 @@ class RegisterView(APIView):
         if serializer.is_valid():
             try:
                 user = authe.create_user_with_email_and_password(serializer.validated_data['email'], serializer.validated_data['password'])
-                link = authe.send_email_verification(user['idToken'])
+                authe.send_email_verification(user['idToken'])
             except:
                 return Response({"error": "User already exists"}, status=status.HTTP_400_BAD_REQUEST)
-
+            
             serializer.save()
+
+            new_user_profile = User(account=Account.objects.latest('id'))
+            new_user_profile.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -49,38 +60,83 @@ class LoginView(APIView):
         serializer = AccountSerializer(data=request.data)
 
         if serializer.is_valid():
-            try:
-                user = authe.sign_in_with_email_and_password(serializer.data['email'], serializer.data['password'])
-                
-                if not authe.get_account_info(user['idToken'])['users'][0]['emailVerified']:
-                    return Response({"error": "Email not verified"}, status=status.HTTP_400_BAD_REQUEST)
-            except:
-                return Response({"error": "Invalid email or password"}, status=status.HTTP_400_BAD_REQUEST)
+            email, password = serializer.validated_data.values()
 
-            request.session['uid'] = str(user['idToken'])
-            return Response(user, status=status.HTTP_200_OK)
+            try:
+                account = Account.objects.get(email=email)
+
+            except account.DoesNotExist:
+                return Response({"error": "Invalid account"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                user = authenticate(email=email, password=password)
+            except:
+                return Response({"error": "Invalid credentials. Check your account again."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if user.is_active:
+                try:
+                    login(request, user)
+                    return Response({"_id": user.id, "email": user.email}, status=status.HTTP_200_OK)
+                    
+                except:
+                    return Response({"error": "Invalid credentials. Check your account again."}, status=status.HTTP_400_BAD_REQUEST)
+                    
+            return Response({"error": "Account is not active"}, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LogoutView(APIView):
-    def post(self, request):
-        try:
-            del request.session['uid']
 
-        except:
-            return Response({"message": "User not logged in"}, status=status.HTTP_400_BAD_REQUEST)
+class LogoutView(APIView):
+    def get(self, request):
+        if request.user.is_authenticated:
+            try:
+                logout(request)
+                return Response({"Message": "Logout succeeded"}, status=status.HTTP_200_OK)
+
+            except:
+                return Response({"Message": "Logout failed"}, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response({"message": "Logout succeeded"}, status=status.HTTP_200_OK)
+        return Response({"Message": "User hasn't login"}, status=status.HTTP_200_OK)
     
 
+# cần xem xét lại cách sử dụng firebase và mysql
 class ResetPasswordView(APIView):
     permission_classes = (AllowAny,)
 
+    # def post(self, request):
+    #     print(request.data)
+    #     try:
+    #         authe.send_password_reset_email(request.data['email'])
+    #     except:
+    #         return Response({"error": "Invalid email"}, status=status.HTTP_400_BAD_REQUEST)
+        
+    #     account = auth.get_user_by_email(request.data['email'])
+    #     new_password = account
+        
+    #     user = Account.objects.get(email=request.account.email)
+    #     if not user.check_password(new_password):
+    #         user.set_password(new_password)
+    #         user.save()
+        
+    #     return Response({"message": "Reset password email sent"}, status=status.HTTP_200_OK)
+
+
+class ChangePasswordView(APIView):
     def post(self, request):
-        try:
-            authe.send_password_reset_email(request.data['email'])
-        except:
-            return Response({"error": "Invalid email"}, status=status.HTTP_400_BAD_REQUEST)
+        if request.user.is_authenticated:
+            account = Account.objects.get(email=request.user.email)
+            serializer = ChangePasswordSerializer(data=request.data)
             
-        return Response({"message": "Reset password email sent"}, status=status.HTTP_200_OK)
+            if serializer.is_valid():
+                if not account.check_password(serializer.validated_data['old_password']):
+                    return Response({"error": "Wrong password"}, status=status.HTTP_400_BAD_REQUEST)
+                
+                account.set_password(serializer.validated_data['new_password'])
+                account.save()
+
+                return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"error": "User hasn't login"}, status=status.HTTP_400_BAD_REQUEST)
