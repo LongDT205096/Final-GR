@@ -4,12 +4,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 
+from .models import User
 from .serializer import (
     ProfileSerializer,
     ProfileUpdateSerializer
 )
 
-from .models import User
 
 class ProfileView(APIView):
     def get(self, request):
