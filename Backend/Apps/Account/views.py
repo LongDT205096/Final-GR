@@ -44,10 +44,10 @@ class RegisterView(APIView):
             except:
                 return Response({"error": "User already exists"}, status=status.HTTP_400_BAD_REQUEST)
             
-            serializer.save()
-
-            new_user_profile = User(account=Account.objects.latest('id'))
+            new_accoount = serializer.save()
+            new_user_profile = User(account=new_accoount)
             new_user_profile.save()
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -69,16 +69,20 @@ class LoginView(APIView):
             
             try:
                 user = authenticate(email=email, password=password)
-                if user.is_active:
+                fb_user = auth.get_user_by_email(email)
+                if fb_user.email_verified:
+                    if not user.is_active:
+                        user.is_active = True
+                        user.save()
+
                     login(request, user)
-                    return Response({"_id": user.id, "email": user.email}, status=status.HTTP_200_OK)
+                    return Response({"id": user.id, "email": user.email}, status=status.HTTP_200_OK)
+                    
+                return Response({"error": "Account is not active"}, status=status.HTTP_400_BAD_REQUEST)
             except:
                 return Response({"error": "Invalid credentials. Check your account again."}, status=status.HTTP_400_BAD_REQUEST)
-                    
-            return Response({"error": "Account is not active"}, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class LogoutView(APIView):

@@ -11,7 +11,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=50, unique=True, blank=True)
     password = models.CharField(max_length=256)
     is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
