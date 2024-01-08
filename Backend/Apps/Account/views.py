@@ -64,22 +64,16 @@ class LoginView(APIView):
 
             try:
                 account = Account.objects.get(email=email)
-
             except account.DoesNotExist:
                 return Response({"error": "Invalid account"}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
                 user = authenticate(email=email, password=password)
-            except:
-                return Response({"error": "Invalid credentials. Check your account again."}, status=status.HTTP_400_BAD_REQUEST)
-            
-            if user.is_active:
-                try:
+                if user.is_active:
                     login(request, user)
                     return Response({"_id": user.id, "email": user.email}, status=status.HTTP_200_OK)
-                    
-                except:
-                    return Response({"error": "Invalid credentials. Check your account again."}, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                return Response({"error": "Invalid credentials. Check your account again."}, status=status.HTTP_400_BAD_REQUEST)
                     
             return Response({"error": "Account is not active"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -93,7 +87,6 @@ class LogoutView(APIView):
             try:
                 logout(request)
                 return Response({"Message": "Logout succeeded"}, status=status.HTTP_200_OK)
-
             except:
                 return Response({"Message": "Logout failed"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -127,13 +120,15 @@ class ChangePasswordView(APIView):
         if request.user.is_authenticated:
             account = Account.objects.get(email=request.user.email)
             serializer = ChangePasswordSerializer(data=request.data)
-            
+            uid = auth.get_user_by_email(request.user.email).uid
+
             if serializer.is_valid():
                 if not account.check_password(serializer.validated_data['old_password']):
                     return Response({"error": "Wrong password"}, status=status.HTTP_400_BAD_REQUEST)
                 
                 account.set_password(serializer.validated_data['new_password'])
                 account.save()
+                user = auth.update_user(uid, password=serializer.validated_data['new_password'])
 
                 return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
 
