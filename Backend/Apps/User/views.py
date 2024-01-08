@@ -11,35 +11,31 @@ from .serializer import (
 
 from .models import User
 
-
-class NewProfileView(APIView):
-    permission_classes = (AllowAny,)
-
-    def post(self, request):
-        serializer = ProfileSerializer(data=request.data)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"success": "Profile created"}, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class ProfileView(APIView):
     def get(self, request):
         try:
-            profile = User.objects.get(account__uid=request.session['uid'])
+            profile = User.objects.get(account_id=request.user.id)
         except:
             return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
-
+        
         serializer = ProfileSerializer(profile)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ProfileUpdateView(APIView):
+    def get(self, request):
+        try:
+            profile = User.objects.get(account_id=request.user.id)
+        except:
+            return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = ProfileSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
     def put(self, request):
         try:
-            profile = User.objects.get(account__uid=request.session['uid'])
+            profile = User.objects.get(account_id=request.user.id)
         except:
             return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
 
