@@ -2,20 +2,17 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-from rest_framework.exceptions import ValidationError
-from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
-from firebase_admin import auth, initialize_app, credentials
+from firebase_admin import auth, initialize_app
 import pyrebase
 
+from .models import Account
+from ..User.models import User
 from .serializer import (
     AccountSerializer,
     ChangePasswordSerializer
 )
 
-from .models import Account
-from ..User.models import User
 
 config = {
 	'apiKey': "AIzaSyBo8aZIf-kUIUZvWdv2BRg4_tJ9SRj5jnA",

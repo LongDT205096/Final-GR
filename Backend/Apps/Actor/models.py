@@ -5,9 +5,9 @@ class Actor(models.Model):
     name = models.CharField(max_length=100)
     age = models.IntegerField()
     born = models.CharField(max_length=100)
-    biography = models.TextField(max_length=20000)
+    biography = models.TextField(max_length=10000, blank=True, null=True)
     movies = models.ManyToManyField('Movie.Movie', related_name="actor_movies", blank=True)
-    image_url = models.CharField(max_length=200)
+    image_url = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         return self.name
