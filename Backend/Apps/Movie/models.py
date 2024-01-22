@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Avg
 
 # Create your models here.
 class Genre(models.Model):
@@ -34,7 +35,7 @@ class Genre(models.Model):
 class Movie(models.Model):
     title = models.CharField(max_length=50)
     year = models.IntegerField()
-    average_rating = models.FloatField(default=0.0)
+    ave_rating = models.FloatField(default=0.0)
     genres = models.ManyToManyField(Genre, related_name='movie_genre')
     directors = models.ManyToManyField('Director.Director', related_name='movie_directors')
     actors = models.ManyToManyField('Actor.Actor', related_name='movie_actors')
@@ -47,6 +48,9 @@ class Movie(models.Model):
     def __str__(self) -> str:
         return self.title
     
+    def average_rating(self) -> float:
+        return self.movie_review.aggregate(Avg('stars_rate'))['stars_rate__avg']
+    
 class movieVideo(models.Model):
     url = models.CharField(max_length=200)
     movie = models.ForeignKey(Movie, related_name='movie_video', on_delete=models.CASCADE)
@@ -55,3 +59,14 @@ class movieVideo(models.Model):
     
     def __str__(self) -> str:
         return self.movie.title
+
+class Review(models.Model):
+    movie = models.ForeignKey('Movie.Movie', related_name='movie_review', on_delete=models.CASCADE)
+    user = models.ForeignKey('Account.Account', related_name='user_review', on_delete=models.CASCADE)
+    title = models.CharField(max_length=100)
+    comment = models.TextField(max_length=5000)
+    stars_rate = models.FloatField(default=0.0)
+    update_time = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.username + ' - ' + self.movie.title

@@ -39,7 +39,7 @@ class RegisterView(APIView):
                 user = authe.create_user_with_email_and_password(serializer.validated_data['email'], serializer.validated_data['password'])
                 authe.send_email_verification(user['idToken'])
             except:
-                return Response({"error": "User already exists"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Register failed"}, status=status.HTTP_400_BAD_REQUEST)
             
             new_accoount = serializer.save()
             new_user_profile = User(account=new_accoount)
@@ -58,24 +58,26 @@ class LoginView(APIView):
 
         if serializer.is_valid():
             email, password = serializer.validated_data.values()
-
             try:
                 account = Account.objects.get(email=email)
             except account.DoesNotExist:
                 return Response({"error": "Invalid account"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            try:
-                user = authenticate(email=email, password=password)
-                fb_user = auth.get_user_by_email(email)
-                if fb_user.email_verified:
-                    if not user.is_active:
-                        user.is_active = True
-                        user.save()
 
-                    login(request, user)
-                    return Response({"id": user.id, "email": user.email}, status=status.HTTP_200_OK)
-                    
+            try:
+                if not account.check_password(password):
+                    return Response({"error": "Wrong password"}, status=status.HTTP_400_BAD_REQUEST)
+                
+                fb_user = auth.get_user_by_email(email)
+                if fb_user.email_verified == True:
+                    if not account.is_active:
+                        account.is_active = True
+                        account.save()
+                    login(request, account)
+
+                    return Response({"id": account.id, "email": account.email}, status=status.HTTP_200_OK)
+                print("email not verified")
                 return Response({"error": "Account is not active"}, status=status.HTTP_400_BAD_REQUEST)
+            
             except:
                 return Response({"error": "Invalid credentials. Check your account again."}, status=status.HTTP_400_BAD_REQUEST)
         
