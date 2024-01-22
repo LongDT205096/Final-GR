@@ -162,11 +162,11 @@ cython_debug/
 
 /media/images
 
-Backend/Apps/Account/migrations/
-Backend/Apps/Actor/migrations/
-Backend/Apps/Director/migrations/
-Backend/Apps/Movie/migrations/
-Backend/Apps/Review/migrations/
-Backend/Apps/User/migrations/
-Backend/Apps/Watchlist/migrations/
+Backend/Apps/Account/migrations
+Backend/Apps/Actor/migrations
+Backend/Apps/Director/migrations
+Backend/Apps/Movie/migrations
+Backend/Apps/Review/migrations
+Backend/Apps/User/migrations
+Backend/Apps/Watchlist/migrations
 
