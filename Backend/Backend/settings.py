@@ -56,7 +56,6 @@ INSTALLED_APPS = [
     "Apps.Movie",
     "Apps.Director",
     "Apps.Watchlist",
-    "Apps.Review",
     "Apps.Actor",
 ]
 

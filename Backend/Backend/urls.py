@@ -23,7 +23,6 @@ urlpatterns = [
     path("actors/", include("Apps.Actor.urls")),
     path("directors/", include("Apps.Director.urls")),
     path("movies/", include("Apps.Movie.urls")),
-    path("reviews/", include("Apps.Review.urls")),
     path("user/", include("Apps.User.urls")),
     path("watchlist/", include("Apps.Watchlist.urls")),  
     
