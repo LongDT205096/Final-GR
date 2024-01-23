@@ -49,8 +49,9 @@ class Movie(models.Model):
         return self.title
     
     def average_rating(self) -> float:
-        return self.movie_review.aggregate(Avg('stars_rate'))['stars_rate__avg']
+        return Review.objects.filter(movie=self).aggregate(Avg('stars_rate'))['stars_rate__avg']
     
+
 class movieVideo(models.Model):
     url = models.CharField(max_length=200)
     movie = models.ForeignKey(Movie, related_name='movie_video', on_delete=models.CASCADE)
@@ -59,12 +60,13 @@ class movieVideo(models.Model):
     
     def __str__(self) -> str:
         return self.movie.title
+    
 
 class Review(models.Model):
     movie = models.ForeignKey('Movie.Movie', related_name='movie_review', on_delete=models.CASCADE)
     user = models.ForeignKey('Account.Account', related_name='user_review', on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
-    comment = models.TextField(max_length=5000)
+    comment = models.TextField(max_length=5000, blank=True)
     stars_rate = models.FloatField(default=0.0)
     update_time = models.DateTimeField(auto_now_add=True)
 
