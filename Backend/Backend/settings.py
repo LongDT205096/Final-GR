@@ -29,13 +29,13 @@ SECRET_KEY = "django-insecure-n05e7b9q9v4ze^q*po(cpx9c-ko#ojaa#4neh4uv9#eoe41=2g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
 AUTH_USER_MODEL = "Account.Account"
 
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
 }
@@ -60,19 +60,34 @@ INSTALLED_APPS = [
     "Apps.Actor",
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-];
-
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
+]
+
+ALLOWED_HOSTS = ['*']
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = (
+    'http://localhost:3000',
+)
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'withcredentials',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
 
 ROOT_URLCONF = "Backend.urls"

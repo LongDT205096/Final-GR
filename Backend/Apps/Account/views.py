@@ -1,8 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from firebase_admin import auth, initialize_app
 import pyrebase
 
@@ -30,7 +30,11 @@ authe = firebase.auth()
 database = firebase.database()
 default_app = initialize_app()
 
+
+
 class RegisterView(APIView):
+    permission_classes = (AllowAny,)
+
     def post(self, request):
         serializer = AccountSerializer(data=request.data)
 		
@@ -50,6 +54,7 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
 class LoginView(APIView):
     permission_classes = (AllowAny,)
 
@@ -61,7 +66,7 @@ class LoginView(APIView):
             try:
                 account = Account.objects.get(email=email)
             except account.DoesNotExist:
-                return Response({"error": "Invalid account"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Wrong email"}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
                 if not account.check_password(password):
@@ -73,9 +78,8 @@ class LoginView(APIView):
                         account.is_active = True
                         account.save()
                     login(request, account)
-
-                    return Response({"id": account.id, "email": account.email}, status=status.HTTP_200_OK)
-                print("email not verified")
+                    return Response({"sessionid": request.session.session_key, "email": account.email}, status=status.HTTP_200_OK)
+                
                 return Response({"error": "Account is not active"}, status=status.HTTP_400_BAD_REQUEST)
             
             except:
@@ -84,8 +88,13 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
 class LogoutView(APIView):
     def get(self, request):
+        return Response({"sessionid": request.session.session_key}, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        print(request.session.session_key)
         if request.user.is_authenticated:
             try:
                 logout(request)
@@ -96,9 +105,20 @@ class LogoutView(APIView):
         return Response({"Message": "User hasn't login"}, status=status.HTTP_200_OK)
     
 
+
+class UserView(APIView):
+    def get(self, request):
+        if request.user.is_authenticated:
+            account = Account.objects.get(email=request.user.email)
+            serializer = AccountSerializer(account)
+            return Response({ "email":serializer.data["email"], "session_id": request.session.session_key }, status=status.HTTP_200_OK)
+        
+        return Response({"error": "User hasn't login"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 # cần xem xét lại cách sử dụng firebase và mysql
-class ResetPasswordView(APIView):
-    permission_classes = (AllowAny,)
+# class ResetPasswordView(APIView):
+#     permission_classes = (AllowAny,)
 
     # def post(self, request):
     #     print(request.data)
@@ -116,6 +136,7 @@ class ResetPasswordView(APIView):
     #         user.save()
         
     #     return Response({"message": "Reset password email sent"}, status=status.HTTP_200_OK)
+
 
 
 class ChangePasswordView(APIView):
