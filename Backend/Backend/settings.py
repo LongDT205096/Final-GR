@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+from datetime import timedelta
 
 load_dotenv()
 
@@ -31,16 +32,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-AUTH_USER_MODEL = "Account.Account"
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-}
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -51,7 +42,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "djoser",
     "corsheaders",
+    
+    #cumstom apps
     "Apps.User",
     "Apps.Account",
     "Apps.Movie",
@@ -60,19 +54,16 @@ INSTALLED_APPS = [
     "Apps.Actor",
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-];
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
+    'social_django.middleware.SocialAuthExceptionMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = "Backend.urls"
@@ -95,7 +86,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "Backend.wsgi.application"
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(SETTINGS_PATH, "final-gr.json")
 
 
 # Database
@@ -131,6 +121,55 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+AUTH_USER_MODEL = "Account.Account"
+
+#EMAIL SETTINGS
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST_USER = "dinhthanhlong1270@gmail.com"
+EMAIL_HOST_PASSWORD = "ofrrpugbogsspirx"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+
+#SIMPLE JWT SETTINGS
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('JWT',),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_TOKEN_CLASSES': (
+        'rest_framework_simplejwt.tokens.AccessToken',
+    )
+}
+
+# DJOSER SETTINGS
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+    'USER_CREATE_PASSWORD_RETYPE': True,
+    'SET_PASSWORD_RETYPE': True,
+    'SEND_ACTIVATION_EMAIL': True,
+    'ACTIVATION_URL': 'activate/{uid}/{token}',
+    'SEND_CONFIRMATION_EMAIL': True,
+    'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
+    'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}',
+    'PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND': True,
+    'SERIALIZERS': {
+        'user_create': 'Apps.Account.serializer.UserCreateSerializer',
+        'user': 'Apps.Account.serializer.UserCreateSerializer',
+        'current_user': 'accounts.serializers.UserCreateSerializer',
+        'user_delete': 'djoser.serializers.UserDeleteSerializer',
+    },
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 
 
 # Internationalization

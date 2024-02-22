@@ -1,23 +1,8 @@
-from rest_framework import serializers
+from djoser.serializers import UserCreateSerializer
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
-from .models import Account
-
-class AccountSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
-    password = serializers.CharField(max_length=256)
-
-    class Meta:
-        model = Account
-        fields = ['email', 'password']
-
-    def create(self, validated_data):
-        return Account.objects.create_user(**validated_data)
-
-
-class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(max_length=256)
-    new_password = serializers.CharField(max_length=256)
-
-    class Meta:
-        model = Account
-        fields = ['old_password', 'new_password']
+class UserCreateSerializer(UserCreateSerializer):
+    class Meta(UserCreateSerializer.Meta):
+        model = User
+        fields = ('id', 'email', 'password')
