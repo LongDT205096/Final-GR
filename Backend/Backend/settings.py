@@ -30,8 +30,6 @@ SECRET_KEY = "django-insecure-n05e7b9q9v4ze^q*po(cpx9c-ko#ojaa#4neh4uv9#eoe41=2g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -56,6 +54,7 @@ INSTALLED_APPS = [
 
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -64,6 +63,26 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ALLOWED_HOSTS = ['*']
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',  # React
+    'http://127.0.0.1:3000',  # React
+]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'withcredentials',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
 
 ROOT_URLCONF = "Backend.urls"
@@ -157,7 +176,7 @@ DJOSER = {
     'SERIALIZERS': {
         'user_create': 'Apps.Account.serializer.UserCreateSerializer',
         'user': 'Apps.Account.serializer.UserCreateSerializer',
-        'current_user': 'accounts.serializers.UserCreateSerializer',
+        'current_user': 'Apps.Account.serializer.UserCreateSerializer',
         'user_delete': 'djoser.serializers.UserDeleteSerializer',
     },
 }
